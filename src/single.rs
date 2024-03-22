@@ -1,25 +1,39 @@
+/// Type alias for an optional boxed node, simplifying the type signature.
 type OptionNode<T> = Option<Box<Node<T>>>;
 
-/// The Node struct represents each element in the LinkedList.
+/// A node in the singly linked list.
+///
+/// Each node holds its own data of generic type `T` and a pointer (optional) to the next node in the list.
 #[derive(Clone)]
 pub struct Node<T> {
     data: T,
     next: OptionNode<T>,
 }
 
-impl <T> Node<T> {
-    /// Constructs a new Node with the given data.
+impl<T> Node<T> {
+    /// Constructs a new `Node` instance encapsulating the given data, with no subsequent node.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - The data to be stored in the new node.
     fn new(data: T) -> Self {
         Node { data, next: None }
     }
-    
-    /// Returns a reference to the data in the node.
+
+    /// Provides a reference to the node's data.
+    ///
+    /// # Returns
+    ///
+    /// A reference to the data stored in the node.
     pub fn data(&self) -> &T {
         &self.data
     }
 }
 
-/// LinkedList struct, which will use the Node struct for its elements.
+/// Represents a singly linked list with elements of type `T`.
+///
+/// The list maintains ownership of its nodes, and provides methods to manipulate
+/// the list's structure, such as adding and removing elements.
 pub struct LinkedList<T> {
     head: OptionNode<T>,
     length: usize,
@@ -31,7 +45,11 @@ impl<T> LinkedList<T> {
         LinkedList { head: None, length: 0 }
     }
 
-    /// Pushes a new element onto the front of the list.
+    /// Inserts an element at the start of the list.
+    ///
+    /// # Arguments
+    ///
+    /// * `elem` - The element to be added to the list.
     pub fn push(&mut self, elem: T) {
         let new_node = Box::new(Node {
             data: elem,
@@ -42,7 +60,11 @@ impl<T> LinkedList<T> {
         self.length += 1;
     }
 
-    /// Appends a new element onto the end of the list.
+    /// Appends an element to the end of the list.
+    ///
+    /// # Arguments
+    ///
+    /// * `elem` - The element to be appended to the list.
     pub fn append(&mut self, elem: T) {
         let new_node = Box::new(Node::new(elem));
 
@@ -55,21 +77,29 @@ impl<T> LinkedList<T> {
         self.length += 1;
     }
 
-    /// Removes and returns the element from the front of the list.
+    /// Removes and returns the first element of the list, if it exists.
+    ///
+    /// # Returns
+    ///
+    /// The removed element, if the list was not empty.
     pub fn pop(&mut self) -> Option<T> {
         let res = self.head.take().map(|node| {
             self.head = node.next;
             node.data
         });
-        
+
         if res.is_some() {
             self.length = self.length.saturating_sub(1);
         }
-        
+
         res
     }
 
-    /// Removes and returns the element from the end of the list.
+    /// Removes and returns the last element of the list, if it exists.
+    ///
+    /// # Returns
+    ///
+    /// The removed element, if the list was not empty.
     pub fn pop_back(&mut self) -> Option<T> {
         if self.head.is_none() {
             return None;
@@ -84,11 +114,15 @@ impl<T> LinkedList<T> {
         if res.is_some() {
             let _ = self.length.saturating_sub(1);
         }
-        
+
         res
     }
 
-    /// Returns the number of elements in the list.
+    /// Returns the current length of the list.
+    ///
+    /// # Returns
+    ///
+    /// The number of elements in the list.
     pub fn len(&self) -> usize {
         self.length
     }
@@ -100,11 +134,19 @@ impl<T> LinkedList<T> {
     }
 
     /// Checks if the list is empty.
+    ///
+    /// # Returns
+    ///
+    /// `true` if the list contains no elements, `false` otherwise.
     pub fn is_empty(&self) -> bool {
         self.length == 0
     }
 
-    /// Returns an iterator over the list.
+    /// Provides an iterator over the list's elements.
+    ///
+    /// # Returns
+    ///
+    /// An iterator that yields references to the elements in the list.
     pub fn iter(&self) -> Iter<T> {
         Iter {
             next: match &self.head {
@@ -127,7 +169,7 @@ impl<T> std::fmt::Debug for LinkedList<T> where T: std::fmt::Debug {
     }
 }
 
-/// An iterator over the elements of the linked list.
+/// Iterator over the elements of a `LinkedList`.
 pub struct Iter<'a, T> {
     next: Option<&'a Node<T>>,
 }
@@ -236,7 +278,7 @@ mod tests {
         assert_eq!(iter.next(), Some(&3));
         assert_eq!(iter.next(), None);
     }
-    
+
     // Test the length of the list after operations.
     #[test]
     fn test_length_after_operations() {

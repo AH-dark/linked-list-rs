@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 use std::rc::{Rc, Weak};
 
+/// A node in a doubly-linked list, containing data of generic type `T`.
 #[derive(Clone)]
 pub struct Node<T> {
     data: T,
@@ -9,6 +10,11 @@ pub struct Node<T> {
 }
 
 impl<T> Node<T> {
+    /// Constructs a new `Node` containing the given data.
+    ///
+    /// # Arguments
+    ///
+    /// * `data` - The data to store in the new `Node`.
     fn new(data: T) -> Rc<Self> {
         Rc::new(Node {
             data,
@@ -17,11 +23,13 @@ impl<T> Node<T> {
         })
     }
 
+    /// Returns a reference to the node's data.
     pub fn data(&self) -> &T {
         &self.data
     }
 }
 
+/// A doubly-linked list with elements of generic type `T`.
 pub struct LinkedList<T> {
     head: Option<Rc<Node<T>>>,
     tail: Option<Weak<Node<T>>>,
@@ -29,10 +37,16 @@ pub struct LinkedList<T> {
 }
 
 impl<T> LinkedList<T> {
+    /// Constructs a new, empty `LinkedList`.
     pub fn new() -> Self {
         LinkedList { head: None, tail: None, length: 0 }
     }
 
+    /// Inserts an element at the front of the list.
+    ///
+    /// # Arguments
+    ///
+    /// * `elem` - The data to insert at the front of the list.
     pub fn push_front(&mut self, elem: T) {
         let new_node = Node::new(elem);
         self.length += 1;
@@ -50,6 +64,7 @@ impl<T> LinkedList<T> {
         }
     }
 
+    /// Removes and returns the element at the front of the list, if any.
     pub fn pop_front(&mut self) -> Option<T> {
         let res = self.head.take().and_then(|head_node| {
             match head_node.next.borrow_mut().take() {
@@ -61,17 +76,22 @@ impl<T> LinkedList<T> {
                     self.tail = None;
                 }
             }
-            
+
             Some(Rc::try_unwrap(head_node).ok().unwrap().data)
         });
-        
+
         if res.is_some() {
             self.length = self.length.saturating_sub(1); // Decrement length safely
         }
-        
+
         res
     }
 
+    /// Inserts an element at the back of the list.
+    ///
+    /// # Arguments
+    ///
+    /// * `elem` - The data to insert at the back of the list.
     pub fn push_back(&mut self, elem: T) {
         let new_node = Node::new(elem);
         self.length += 1;
@@ -88,11 +108,12 @@ impl<T> LinkedList<T> {
         }
     }
 
+    /// Removes and returns the element at the back of the list, if any.
     pub fn pop_back(&mut self) -> Option<T> {
         if self.tail.is_some() {
             self.length = self.length.saturating_sub(1); // Decrement length safely
         }
-        
+
         let tail_weak = self.tail.take();
         let old_tail = match tail_weak.and_then(|weak| weak.upgrade()) {
             Some(node) => node,
@@ -115,12 +136,18 @@ impl<T> LinkedList<T> {
         if res.is_some() {
             self.length = self.length.saturating_sub(1); // Decrement length safely
         }
-        
+
         res
     }
 
+    /// Returns the number of elements in the list.
     pub fn len(&self) -> usize {
         self.length
+    }
+    
+    /// Clears the list, removing all elements.
+    pub fn clear(&mut self) {
+        *self = Self::new();
     }
 }
 
@@ -129,7 +156,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn push_and_pop_front() {
+    fn test_push_and_pop_front() {
         let mut list = LinkedList::new();
         assert_eq!(list.pop_front(), None);
 
@@ -144,7 +171,7 @@ mod tests {
     }
 
     #[test]
-    fn push_and_pop_back() {
+    fn test_push_and_pop_back() {
         let mut list = LinkedList::new();
         assert_eq!(list.pop_back(), None);
 
@@ -159,7 +186,7 @@ mod tests {
     }
 
     #[test]
-    fn mixed_push_pop() {
+    fn test_mixed_push_pop() {
         let mut list = LinkedList::new();
 
         list.push_front(1);
@@ -178,7 +205,7 @@ mod tests {
     }
 
     #[test]
-    fn length_after_operations() {
+    fn test_length_after_operations() {
         let mut list = LinkedList::new();
 
         list.push_front(1);
@@ -190,6 +217,19 @@ mod tests {
 
         list.pop_back();
         assert_eq!(list.len(), 0);
+    }
+    
+    #[test]
+    fn test_clear() {
+        let mut list = LinkedList::new();
+
+        list.push_front(1);
+        list.push_back(2);
+        list.clear();
+
+        assert_eq!(list.len(), 0);
+        assert_eq!(list.pop_front(), None);
+        assert_eq!(list.pop_back(), None);
     }
 }
 
