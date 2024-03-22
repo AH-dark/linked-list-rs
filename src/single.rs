@@ -1,6 +1,7 @@
 type OptionNode<T> = Option<Box<Node<T>>>;
 
 /// The Node struct represents each element in the LinkedList.
+#[derive(Clone)]
 pub struct Node<T> {
     data: T,
     next: OptionNode<T>,
